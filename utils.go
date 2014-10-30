@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"path"
 	"strings"
@@ -46,7 +47,10 @@ func RenderJSONError(w http.ResponseWriter, code int, s string) {
 func RenderJSON(w http.ResponseWriter, code int, s JSONData) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(code)
-	json.NewEncoder(w).Encode(s)
+	err := json.NewEncoder(w).Encode(s)
+	if err != nil {
+		log.Println("JSON Encoding error:", err)
+	}
 }
 
 // RenderJSONgzip common function to render gzipped JSON to client
@@ -56,7 +60,10 @@ func RenderJSONgzip(w http.ResponseWriter, code int, s JSONData) {
 	w.WriteHeader(code)
 	gz := gzip.NewWriter(w)
 	defer gz.Close()
-	json.NewEncoder(gz).Encode(s)
+	err := json.NewEncoder(gz).Encode(s)
+	if err != nil {
+		log.Println("JSON Encoding error:", err)
+	}
 }
 
 // cleanPath returns the canonical path for p, eliminating . and .. elements.
