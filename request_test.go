@@ -120,3 +120,20 @@ func TestBody(t *testing.T) {
 	r.LoadJSONRequest("id1", &res)
 	assertEqual(t, nil, res)
 }
+
+type TestC struct {
+	Request
+}
+
+func (t *TestC) Index() {
+	t.RenderJSON(200, JSONData{})
+}
+
+func BenchmarkIndexAction(b *testing.B) {
+	req := newRequest("GET", "http://localhost/pages/", "{}")
+	handler := handle(&TestC{}, "page", []ReqFunc{})
+
+	for n := 0; n < b.N; n++ {
+		handler(newRecorder(), req)
+	}
+}
