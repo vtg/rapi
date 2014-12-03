@@ -27,21 +27,16 @@ func handle(i Controller, rootKey string, funcs []ReqFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		t := reflect.Indirect(reflect.ValueOf(i)).Type()
 		c := reflect.New(t)
-		c.MethodByName("Init").Call([]reflect.Value{
-			reflect.ValueOf(w),
-			reflect.ValueOf(req),
-			reflect.ValueOf(rootKey),
-		})
+		ctr := c.Interface().(Controller)
+		ctr.Init(w, req, rootKey)
 
 		for _, f := range funcs {
-			if ok := f(c.Interface().(Controller)); !ok {
+			if ok := f(ctr); !ok {
 				return
 			}
 		}
 
-		action := c.MethodByName("CurrentAction").Call([]reflect.Value{})
-
-		if method := c.MethodByName(action[0].String()); method.IsValid() {
+		if method := c.MethodByName(ctr.CurrentAction()); method.IsValid() {
 			method.Call([]reflect.Value{})
 		} else {
 			RenderJSONError(w, http.StatusBadRequest, "action not found")
