@@ -109,9 +109,9 @@ func (r *Request) CurrentAction() string {
 func (r *Request) RenderJSON(code int, s JSONData) {
 	if strings.Contains(r.req.Header.Get("Accept-Encoding"), "gzip") {
 		RenderJSONgzip(r.w, code, s)
-	} else {
-		RenderJSON(r.w, code, s)
+		return
 	}
+	RenderJSON(r.w, code, s)
 }
 
 // RenderJSONError rendering error to client in JSON format

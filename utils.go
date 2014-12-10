@@ -7,14 +7,11 @@ import (
 	"log"
 	"net/http"
 	"path"
-	"strings"
 	"unicode"
 )
 
 func extractJSONPayload(data io.Reader, v interface{}) error {
-	decoder := json.NewDecoder(data)
-	err := decoder.Decode(&v)
-	return err
+	return json.NewDecoder(data).Decode(&v)
 }
 
 func capitalize(s string) string {
@@ -26,18 +23,6 @@ func capitalize(s string) string {
 	return string(a)
 }
 
-func urlParts(path string) map[int]string {
-	res := make(map[int]string)
-	path = strings.TrimSpace(path)
-	path = strings.TrimLeft(path, "/")
-	path = strings.TrimRight(path, "/")
-	parts := strings.Split(path, "/")
-	for k, v := range parts {
-		res[k] = v
-	}
-	return res
-}
-
 // RenderJSONError common function to render error to client in JSON format
 func RenderJSONError(w http.ResponseWriter, code int, s string) {
 	RenderJSON(w, code, JSONData{"errors": JSONData{"message": []string{s}}})
@@ -47,8 +32,7 @@ func RenderJSONError(w http.ResponseWriter, code int, s string) {
 func RenderJSON(w http.ResponseWriter, code int, s JSONData) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(code)
-	err := json.NewEncoder(w).Encode(s)
-	if err != nil {
+	if err := json.NewEncoder(w).Encode(s); err != nil {
 		log.Println("JSON Encoding error:", err)
 	}
 }
@@ -60,8 +44,7 @@ func RenderJSONgzip(w http.ResponseWriter, code int, s JSONData) {
 	w.WriteHeader(code)
 	gz := gzip.NewWriter(w)
 	defer gz.Close()
-	err := json.NewEncoder(gz).Encode(s)
-	if err != nil {
+	if err := json.NewEncoder(gz).Encode(s); err != nil {
 		log.Println("JSON Encoding error:", err)
 	}
 }
