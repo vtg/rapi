@@ -31,6 +31,13 @@ func (r *Router) Route(path string, i Controller, rootKey string, funcs ...ReqFu
 	return route
 }
 
+// HandlePrefix registers a new handler to serve prefix
+func (r *Router) HandlePrefix(path string, handler http.Handler) *Route {
+	route := r.NewRoute(path).Handler(handler)
+	route.addRoute(false)
+	return route
+}
+
 // NewRoute registers an empty route.
 func (r *Router) NewRoute(prefix string) *Route {
 	return &Route{router: r, prefix: prefix}
