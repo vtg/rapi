@@ -6,14 +6,11 @@ type Route struct {
 	router  *Router
 	prefix  string
 	handler http.Handler
-	err     error
 }
 
 // HandleFunc setting function to handle route
-func (r *Route) HandleFunc(s string, f func(http.ResponseWriter, *http.Request)) *Route {
-	route := r.NewRoute(s).HandlerFunc(f)
-	route.addRoute(r.prefix == "")
-	return r
+func (r *Route) HandleFunc(s string, f func(http.ResponseWriter, *http.Request)) {
+	r.NewRoute(s).HandlerFunc(f).addRoute(r.prefix == "")
 }
 
 // Route registers a new route with a matcher for URL path
@@ -27,11 +24,9 @@ func (r *Route) HandleFunc(s string, f func(http.ResponseWriter, *http.Request))
 //  - "page" is the root key for json request/response
 //  - AuthFunc is middleware function that implements ReqFunc.
 //
-func (r *Route) Route(path string, i Controller, rootKey string, funcs ...ReqFunc) *Route {
-	route := r.NewRoute(path)
-	route.HandlerFunc(handle(i, rootKey, route.prefix, funcs...))
-	route.addRoute(false)
-	return route
+func (r *Route) Route(path string, i Controller, rootKey string, funcs ...ReqFunc) {
+	rt := r.NewRoute(path)
+	rt.HandlerFunc(handle(i, rootKey, rt.prefix, funcs...)).addRoute(false)
 }
 
 // FileServer provides static files serving
@@ -45,10 +40,8 @@ func (r *Route) Route(path string, i Controller, rootKey string, funcs ...ReqFun
 //  - dirIndex specifying if it should display directory content or not
 //  - preferGzip specifying if it should look for gzipped file version
 //
-func (r *Route) FileServer(path string, b ...bool) *Route {
-	r.Handler(fileServer(path, b))
-	r.addRoute(false)
-	return r
+func (r *Route) FileServer(path string, b ...bool) {
+	r.Handler(fileServer(path, b)).addRoute(false)
 }
 
 // NewRoute registers an empty route.
@@ -58,9 +51,7 @@ func (r *Route) NewRoute(prefix string) *Route {
 
 // Handler sets a handler for the route.
 func (r *Route) Handler(handler http.Handler) *Route {
-	if r.err == nil {
-		r.handler = handler
-	}
+	r.handler = handler
 	return r
 }
 
@@ -70,12 +61,10 @@ func (r *Route) HandlerFunc(f func(http.ResponseWriter, *http.Request)) *Route {
 }
 
 func (r *Route) addRoute(named bool) *Route {
-	if r.err == nil {
-		if named {
-			r.router.addNamedRoute(r)
-		} else {
-			r.router.addRoute(r)
-		}
+	if named {
+		r.router.addNamedRoute(r)
+	} else {
+		r.router.addRoute(r)
 	}
 	return r
 }
