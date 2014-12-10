@@ -45,36 +45,49 @@ func assertNotEqual(t *testing.T, expect interface{}, v interface{}) {
 	}
 }
 
+func newReq(w http.ResponseWriter, req *http.Request, root, prefix string) *Request {
+	r := &Request{}
+	r.Init(w, req, root, prefix)
+	return r
+}
+
 func TestMakeAction(t *testing.T) {
-	r := Request{}
+	p := "/pages"
+	r := newReq(httpWriter, newRequest("GET", "http://localhost/pages/10", "{}"), "root", p)
+	assertEqual(t, "Show", r.Action)
 
-	r.ID = 10
-	act := r.makeAction("GET", urlParts("/10"))
-	assertEqual(t, "Show", act)
-	act = r.makeAction("POST", urlParts("/10"))
-	assertEqual(t, "Update", act)
-	act = r.makeAction("PUT", urlParts("/10"))
-	assertEqual(t, "Update", act)
-	act = r.makeAction("DELETE", urlParts("/10"))
-	assertEqual(t, "Destroy", act)
-	act = r.makeAction("GET", urlParts("/10/edit"))
-	assertEqual(t, "GETEdit", act)
-	act = r.makeAction("POST", urlParts("/10/edit"))
-	assertEqual(t, "POSTEdit", act)
-	act = r.makeAction("PUT", urlParts("/10/edit"))
-	assertEqual(t, "PUTEdit", act)
-	act = r.makeAction("DELETE", urlParts("/10/edit"))
-	assertEqual(t, "DELETEEdit", act)
+	r = newReq(httpWriter, newRequest("GET", "http://localhost/pages/10/edit", "{}"), "root", p)
+	assertEqual(t, "GETEdit", r.Action)
 
-	r.ID = 0
-	act = r.makeAction("GET", urlParts("/action"))
-	assertEqual(t, "GETAction", act)
-	act = r.makeAction("POST", urlParts("/action"))
-	assertEqual(t, "POSTAction", act)
-	act = r.makeAction("PUT", urlParts("/action"))
-	assertEqual(t, "PUTAction", act)
-	act = r.makeAction("DELETE", urlParts("/action"))
-	assertEqual(t, "DELETEAction", act)
+	r = newReq(httpWriter, newRequest("GET", "http://localhost/pages/action", "{}"), "root", p)
+	assertEqual(t, "GETAction", r.Action)
+
+	r = newReq(httpWriter, newRequest("POST", "http://localhost/pages/10", "{}"), "root", p)
+	assertEqual(t, "Update", r.Action)
+
+	r = newReq(httpWriter, newRequest("POST", "http://localhost/pages/10/edit", "{}"), "root", p)
+	assertEqual(t, "POSTEdit", r.Action)
+
+	r = newReq(httpWriter, newRequest("POST", "http://localhost/pages/edit", "{}"), "root", p)
+	assertEqual(t, "POSTEdit", r.Action)
+
+	r = newReq(httpWriter, newRequest("PUT", "http://localhost/pages/10", "{}"), "root", p)
+	assertEqual(t, "Update", r.Action)
+
+	r = newReq(httpWriter, newRequest("PUT", "http://localhost/pages/10/edit", "{}"), "root", p)
+	assertEqual(t, "PUTEdit", r.Action)
+
+	r = newReq(httpWriter, newRequest("PUT", "http://localhost/pages/edit", "{}"), "root", p)
+	assertEqual(t, "PUTEdit", r.Action)
+
+	r = newReq(httpWriter, newRequest("DELETE", "http://localhost/pages/10", "{}"), "root", p)
+	assertEqual(t, "Destroy", r.Action)
+
+	r = newReq(httpWriter, newRequest("DELETE", "http://localhost/pages/10/edit", "{}"), "root", p)
+	assertEqual(t, "DELETEEdit", r.Action)
+
+	r = newReq(httpWriter, newRequest("DELETE", "http://localhost/pages/edit", "{}"), "root", p)
+	assertEqual(t, "DELETEEdit", r.Action)
 }
 
 func TestQueryParams(t *testing.T) {

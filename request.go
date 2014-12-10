@@ -14,7 +14,7 @@ import (
 type Request struct {
 	ID     int64  // storing record ID from URL
 	Root   string // default JSON root key
-	action string
+	Action string
 	params map[string]interface{}
 
 	req *http.Request
@@ -27,19 +27,19 @@ func (r *Request) Init(w http.ResponseWriter, req *http.Request, root, prefix st
 	r.w = w
 	r.Root = root
 
-	urlParts := urlParts(strings.TrimPrefix(req.URL.Path, prefix))
-	r.ID, _ = strconv.ParseInt(urlParts[0], 10, 64)
-	r.action = r.makeAction(req.Method, urlParts)
+	urlParts := getParts(req.URL.Path, prefix)
+	r.ID = urlParts.ID()
+	r.Action = r.makeAction(urlParts)
 
 	r.params = make(map[string]interface{})
 }
 
-func (r *Request) makeAction(method string, urlParts map[int]string) string {
-	if len(urlParts[1]) > 0 {
-		return method + capitalize(urlParts[1])
+func (r *Request) makeAction(urlParts parts) string {
+	if urlParts.action != "" {
+		return r.req.Method + capitalize(urlParts.action)
 	}
 	if r.ID > 0 {
-		switch method {
+		switch r.req.Method {
 		case "GET":
 			return "Show"
 		case "POST", "PUT":
@@ -49,11 +49,11 @@ func (r *Request) makeAction(method string, urlParts map[int]string) string {
 		}
 	}
 
-	if len(urlParts[0]) > 0 {
-		return method + capitalize(urlParts[0])
+	if urlParts.id != "" {
+		return r.req.Method + capitalize(urlParts.id)
 	}
 
-	switch method {
+	switch r.req.Method {
 	case "GET":
 		return "Index"
 	case "POST":
@@ -100,7 +100,7 @@ func (r *Request) Header(s string) string {
 
 // CurrentAction returns current controller action
 func (r *Request) CurrentAction() string {
-	return r.action
+	return r.Action
 }
 
 // RenderJSON rendering JSON to client
@@ -144,4 +144,33 @@ func (r *Request) LoadFile(field, dir string) (string, error) {
 	defer f.Close()
 	io.Copy(f, file)
 	return handler.Filename, nil
+}
+
+type parts struct {
+	id, action string
+}
+
+func (p parts) ID() (i int64) {
+	i, _ = strconv.ParseInt(p.id, 10, 64)
+	return
+}
+
+func getParts(path, prefix string) parts {
+	res := parts{}
+	path = strings.TrimPrefix(path, prefix)
+	path = strings.TrimSpace(path)
+	path = strings.TrimPrefix(path, "/")
+	path = strings.TrimSuffix(path, "/")
+	parts := strings.Split(path, "/")
+
+	l := len(parts)
+
+	if l > 0 {
+		res.id = parts[0]
+		if l > 1 {
+			res.action = parts[1]
+		}
+	}
+
+	return res
 }
