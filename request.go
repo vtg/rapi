@@ -160,7 +160,6 @@ func (p parts) ID() (i int64) {
 func getParts(path, prefix string) parts {
 	res := parts{}
 	path = strings.TrimPrefix(path, prefix)
-	path = strings.TrimSpace(path)
 	path = strings.TrimPrefix(path, "/")
 	path = strings.TrimSuffix(path, "/")
 	parts := strings.Split(path, "/")
