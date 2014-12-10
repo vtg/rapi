@@ -6,7 +6,7 @@ import (
 )
 
 type Controller interface {
-	Init(w http.ResponseWriter, req *http.Request, root string)
+	Init(w http.ResponseWriter, req *http.Request, root, prefix string)
 	QueryParam(string) string
 	SetParam(string, interface{})
 	Param(string) interface{}
@@ -23,12 +23,12 @@ type ReqFunc func(Controller) bool
 type JSONData map[string]interface{}
 
 // handle returns http handler function that will process controller actions
-func handle(i Controller, rootKey string, funcs []ReqFunc) http.HandlerFunc {
+func handle(i Controller, rootKey, prefix string, funcs ...ReqFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		t := reflect.Indirect(reflect.ValueOf(i)).Type()
 		c := reflect.New(t)
 		ctr := c.Interface().(Controller)
-		ctr.Init(w, req, rootKey)
+		ctr.Init(w, req, rootKey, prefix)
 
 		for _, f := range funcs {
 			if ok := f(ctr); !ok {

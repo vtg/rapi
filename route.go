@@ -6,7 +6,6 @@ type Route struct {
 	router  *Router
 	prefix  string
 	handler http.Handler
-	match   string
 	err     error
 }
 
@@ -29,7 +28,8 @@ func (r *Route) HandleFunc(s string, f func(http.ResponseWriter, *http.Request))
 //  - AuthFunc is middleware function that implements ReqFunc.
 //
 func (r *Route) Route(path string, i Controller, rootKey string, funcs ...ReqFunc) *Route {
-	route := r.NewRoute(path).HandlerFunc(handle(i, rootKey, funcs))
+	route := r.NewRoute(path)
+	route.HandlerFunc(handle(i, rootKey, route.prefix, funcs...))
 	route.addRoute(false)
 	return route
 }

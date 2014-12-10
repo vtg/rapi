@@ -80,7 +80,7 @@ func TestMakeAction(t *testing.T) {
 func TestQueryParams(t *testing.T) {
 	req := newRequest("GET", "http://localhost/?p1=1&p2=2", "{}")
 	r := Request{}
-	r.Init(httpWriter, req, "root")
+	r.Init(httpWriter, req, "root", "")
 	assertEqual(t, "1", r.QueryParam("p1"))
 	assertEqual(t, "2", r.QueryParam("p2"))
 	assertEqual(t, "", r.QueryParam("p3"))
@@ -89,7 +89,7 @@ func TestQueryParams(t *testing.T) {
 func TestHeader(t *testing.T) {
 	req := newRequest("GET", "http://localhost", "{}")
 	r := Request{}
-	r.Init(httpWriter, req, "root")
+	r.Init(httpWriter, req, "root", "")
 	assertEqual(t, "token1", r.Header("X-API-Token"))
 	assertEqual(t, "", r.Header("X-API-Token1"))
 }
@@ -97,7 +97,7 @@ func TestHeader(t *testing.T) {
 func TestBody(t *testing.T) {
 	req := newRequest("GET", "http://localhost/", "{\"id\":2}")
 	r := Request{}
-	r.Init(httpWriter, req, "root")
+	r.Init(httpWriter, req, "root", "")
 	var res interface{}
 	res = nil
 	r.LoadJSONRequest("", &res)
@@ -107,7 +107,7 @@ func TestBody(t *testing.T) {
 
 	req = newRequest("GET", "http://localhost/", "{\"id\":2}")
 	r = Request{}
-	r.Init(httpWriter, req, "root")
+	r.Init(httpWriter, req, "root", "")
 	res = nil
 	r.LoadJSONRequest("id", &res)
 	in = fmt.Sprintf("%#v", res)
@@ -115,7 +115,7 @@ func TestBody(t *testing.T) {
 
 	req = newRequest("GET", "http://localhost/", "{\"id\":2}")
 	r = Request{}
-	r.Init(httpWriter, req, "root")
+	r.Init(httpWriter, req, "root", "")
 	res = nil
 	r.LoadJSONRequest("id1", &res)
 	assertEqual(t, nil, res)
@@ -126,12 +126,32 @@ type TestC struct {
 }
 
 func (t *TestC) Index() {
-	t.RenderJSON(200, JSONData{})
+	t.RenderJSON(200, JSONData{t.Root: "index"})
+}
+
+func (t *TestC) Show() {
+	t.RenderJSON(200, JSONData{t.Root: "show"})
+}
+
+func TestReponseIndex(t *testing.T) {
+	req := newRequest("GET", "http://localhost/pages/", "{}")
+	handler := handle(&TestC{}, "page", "/pages")
+	rec := newRecorder()
+	handler(rec, req)
+	assertEqual(t, "{\"page\":\"index\"}\n", string(rec.Body.Bytes()))
+}
+
+func TestReponseShow(t *testing.T) {
+	req := newRequest("GET", "http://localhost/pages/10", "{}")
+	handler := handle(&TestC{}, "page", "/pages")
+	rec := newRecorder()
+	handler(rec, req)
+	assertEqual(t, "{\"page\":\"show\"}\n", string(rec.Body.Bytes()))
 }
 
 func BenchmarkIndexAction(b *testing.B) {
 	req := newRequest("GET", "http://localhost/pages/", "{}")
-	handler := handle(&TestC{}, "page", []ReqFunc{})
+	handler := handle(&TestC{}, "page", "/pages")
 
 	for n := 0; n < b.N; n++ {
 		handler(newRecorder(), req)

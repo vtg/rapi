@@ -37,14 +37,12 @@ func TestPathPrefix(t *testing.T) {
 
 	route = r.match("/api/pages1/1")
 	assertEqual(t, "/api/pages1", route.prefix)
-	assertEqual(t, "/1", route.match)
 
 	route = r.match("/pages2/1")
 	assertEqual(t, nil, route.handler)
 
 	route = r.match("/api/pages2/1")
 	assertEqual(t, "/api/pages2", route.prefix)
-	assertEqual(t, "/1", route.match)
 }
 
 func TestRoute(t *testing.T) {
@@ -61,7 +59,6 @@ func TestRoute(t *testing.T) {
 
 	route := r.match("/pages/1")
 	assertEqual(t, "/pages", route.prefix)
-	assertEqual(t, "/1", route.match)
 
 	p := r.PathPrefix("/api")
 	p.Route("/pages", &C{}, "c")
@@ -70,8 +67,6 @@ func TestRoute(t *testing.T) {
 
 	route = r.match("/api/pages/2")
 	assertEqual(t, "/api/pages", route.prefix)
-	assertEqual(t, "/2", route.match)
-
 }
 
 func BenchmarkMatch(b *testing.B) {

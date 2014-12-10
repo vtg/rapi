@@ -24,11 +24,11 @@ type Request struct {
 }
 
 // Init initializing controller
-func (r *Request) Init(w http.ResponseWriter, req *http.Request, root string) {
+func (r *Request) Init(w http.ResponseWriter, req *http.Request, root, prefix string) {
 	r.req = req
 	r.Root = root
 
-	urlParts := urlParts(currentPath(req))
+	urlParts := urlParts(strings.TrimPrefix(req.URL.Path, prefix))
 	r.ID, _ = strconv.ParseInt(urlParts[0], 10, 64)
 	r.action = r.makeAction(req.Method, urlParts)
 
