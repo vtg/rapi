@@ -23,8 +23,8 @@ type Request struct {
 
 // Init initializing controller
 func (r *Request) Init(w http.ResponseWriter, req *http.Request, root, prefix string) {
-	r.req = req
 	r.w = w
+	r.req = req
 	r.Root = root
 
 	urlParts := getParts(req.URL.Path, prefix)
@@ -66,6 +66,8 @@ func (r *Request) makeAction(urlParts parts) string {
 // LoadJSONRequest extracting JSON request by key
 // from request body into interface
 func (r *Request) LoadJSONRequest(root string, v interface{}) {
+	defer r.req.Body.Close()
+
 	if root == "" {
 		extractJSONPayload(r.req.Body, &v)
 		return

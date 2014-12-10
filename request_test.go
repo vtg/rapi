@@ -146,6 +146,12 @@ func (t *TestC) Show() {
 	t.RenderJSON(200, JSONData{t.Root: "show"})
 }
 
+func (t *TestC) Create() {
+	var i interface{}
+	t.LoadJSONRequest("root", &i)
+	t.RenderJSON(200, JSONData{t.Root: i})
+}
+
 func TestReponseIndex(t *testing.T) {
 	req := newRequest("GET", "http://localhost/pages/", "{}")
 	handler := handle(&TestC{}, "page", "/pages")
@@ -162,8 +168,34 @@ func TestReponseShow(t *testing.T) {
 	assertEqual(t, "{\"page\":\"show\"}\n", string(rec.Body.Bytes()))
 }
 
-func BenchmarkIndexAction(b *testing.B) {
+func TestReponseCreate(t *testing.T) {
+	req := newRequest("POST", "http://localhost/pages", `{"root":[{"id":1}]}`)
+	handler := handle(&TestC{}, "page", "/pages")
+	rec := newRecorder()
+	handler(rec, req)
+	assertEqual(t, "{\"page\":[{\"id\":1}]}\n", string(rec.Body.Bytes()))
+}
+
+func BenchmarkHandleIndex(b *testing.B) {
 	req := newRequest("GET", "http://localhost/pages/", "{}")
+	handler := handle(&TestC{}, "page", "/pages")
+
+	for n := 0; n < b.N; n++ {
+		handler(newRecorder(), req)
+	}
+}
+
+func BenchmarkHandleShow(b *testing.B) {
+	req := newRequest("GET", "http://localhost/pages/10", "{}")
+	handler := handle(&TestC{}, "page", "/pages")
+
+	for n := 0; n < b.N; n++ {
+		handler(newRecorder(), req)
+	}
+}
+
+func BenchmarkHandleCreate(b *testing.B) {
+	req := newRequest("POST", "http://localhost/pages/", `{"root":[{"id":1}]}`)
 	handler := handle(&TestC{}, "page", "/pages")
 
 	for n := 0; n < b.N; n++ {
