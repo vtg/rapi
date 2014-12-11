@@ -27,7 +27,7 @@ func (m *Model) ID() int64 {
 	return m.Id
 }
 
-func (m *Model) clearErrors() {
+func (m *Model) ResetErrors() {
 	m.Errors = make(ModelErrors)
 }
 
@@ -162,4 +162,5 @@ type BaseModel interface {
 	AddError(string, string)
 	SetErrors(ModelErrors)
 	GetErrors() ModelErrors
+	ResetErrors()
 }

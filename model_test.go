@@ -9,7 +9,7 @@ type M struct {
 var m = M{}
 
 func TestModelValidatePresence(t *testing.T) {
-	m.clearErrors()
+	m.ResetErrors()
 
 	m.ValidatePresence("Name", "name")
 	assertEqual(t, m.IsValid(), true)
@@ -19,7 +19,7 @@ func TestModelValidatePresence(t *testing.T) {
 }
 
 func TestModelValidateLength(t *testing.T) {
-	m.clearErrors()
+	m.ResetErrors()
 
 	m.ValidateLength("Name", "name", -1, -1) // no limits
 	assertEqual(t, m.IsValid(), true)
@@ -36,19 +36,19 @@ func TestModelValidateLength(t *testing.T) {
 	m.ValidateLength("Name", "name", 5, -1) // min 5
 	assertEqual(t, m.IsValid(), false)
 
-	m.clearErrors()
+	m.ResetErrors()
 
 	m.ValidateLength("Name", "name", -1, 3) // max 3
 	assertEqual(t, m.IsValid(), false)
 
-	m.clearErrors()
+	m.ResetErrors()
 
 	m.ValidateLength("Name", "name", 5, 30) // min 5, max 30
 	assertEqual(t, m.IsValid(), false)
 }
 
 func TestModelValidateInt(t *testing.T) {
-	m.clearErrors()
+	m.ResetErrors()
 
 	m.ValidateInt("Name", 10, -1, -1) // no limits
 	assertEqual(t, m.IsValid(), true)
@@ -62,14 +62,14 @@ func TestModelValidateInt(t *testing.T) {
 	m.ValidateInt("Name", 10, 11, -1) // min 11
 	assertEqual(t, m.IsValid(), false)
 
-	m.clearErrors()
+	m.ResetErrors()
 
 	m.ValidateInt("Name", 10, -1, 9) // max 9
 	assertEqual(t, m.IsValid(), false)
 }
 
 func TestModelValidateInt64(t *testing.T) {
-	m.clearErrors()
+	m.ResetErrors()
 
 	m.ValidateInt64("Name", 10, -1, -1) // no limits
 	assertEqual(t, m.IsValid(), true)
@@ -83,14 +83,14 @@ func TestModelValidateInt64(t *testing.T) {
 	m.ValidateInt64("Name", 10, 11, -1) // min 11
 	assertEqual(t, m.IsValid(), false)
 
-	m.clearErrors()
+	m.ResetErrors()
 
 	m.ValidateInt64("Name", 10, -1, 9) // max 9
 	assertEqual(t, m.IsValid(), false)
 }
 
 func TestModelValidateFloat32(t *testing.T) {
-	m.clearErrors()
+	m.ResetErrors()
 
 	m.ValidateFloat32("Name", 10.1, -1, -1)
 	assertEqual(t, m.IsValid(), true)
@@ -104,14 +104,14 @@ func TestModelValidateFloat32(t *testing.T) {
 	m.ValidateFloat32("Name", 10.1, 11, -1)
 	assertEqual(t, m.IsValid(), false)
 
-	m.clearErrors()
+	m.ResetErrors()
 
 	m.ValidateFloat32("Name", 10.1, -1, 9)
 	assertEqual(t, m.IsValid(), false)
 }
 
 func TestModelValidateFloat64(t *testing.T) {
-	m.clearErrors()
+	m.ResetErrors()
 
 	m.ValidateFloat64("Name", 10.1, -1, -1)
 	assertEqual(t, m.IsValid(), true)
@@ -125,14 +125,14 @@ func TestModelValidateFloat64(t *testing.T) {
 	m.ValidateFloat64("Name", 10.1, 11, -1)
 	assertEqual(t, m.IsValid(), false)
 
-	m.clearErrors()
+	m.ResetErrors()
 
 	m.ValidateFloat64("Name", 10.1, -1, 9)
 	assertEqual(t, m.IsValid(), false)
 }
 
 func TestModelValidateFormat(t *testing.T) {
-	m.clearErrors()
+	m.ResetErrors()
 
 	m.ValidateFormat("IP", "1.1.1.1", `\A(\d{1,3}\.){3}\d{1,3}\z`)
 	assertEqual(t, m.IsValid(), true)
