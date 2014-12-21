@@ -2,16 +2,19 @@ package rapi
 
 import (
 	"net/http"
+	"sort"
 	"strings"
 )
 
 type Router struct {
-	namedRoutes map[string]*Route
-	routes      []*Route
+	routes      map[string]http.Handler
+	namedRoutes map[string]http.Handler
+	keys        []string
+	namedKeys   []string
 }
 
 func NewRouter() *Router {
-	return &Router{namedRoutes: make(map[string]*Route)}
+	return &Router{namedRoutes: make(map[string]http.Handler), routes: make(map[string]http.Handler)}
 }
 
 // HandleFunc registers a new route with a matcher for the URL path.
@@ -38,26 +41,59 @@ func (r *Router) NewRoute(prefix string) *Route {
 }
 
 func (r *Router) addRoute(rt *Route) {
-	r.routes = append(r.routes, rt)
+	r.routes[rt.prefix] = rt.handler
+	r.setKeys()
 }
 
 func (r *Router) addNamedRoute(rt *Route) {
-	r.namedRoutes[rt.prefix] = rt
+	r.namedRoutes[rt.prefix] = rt.handler
+	r.setNamedKeys()
 }
 
-func (r *Router) match(path string) *Route {
-	for k := range r.namedRoutes {
-		if k == path {
-			return r.namedRoutes[k]
+func (r *Router) setKeys() {
+	r.keys = make([]string, len(r.routes))
+	for key := range r.routes {
+		r.keys = append(r.keys, key)
+	}
+	sort.Sort(sort.Reverse(sort.StringSlice(r.keys)))
+}
+
+func (r *Router) setNamedKeys() {
+	r.namedKeys = make([]string, len(r.namedRoutes))
+	for key := range r.namedRoutes {
+		r.namedKeys = append(r.namedKeys, key)
+	}
+	sort.Sort(sort.Reverse(sort.StringSlice(r.namedKeys)))
+}
+
+func (r *Router) matchNamed(path string) string {
+	for _, v := range r.namedKeys {
+		if v == path {
+			return v
 		}
 	}
-	for k := range r.routes {
-		prefix := r.routes[k].prefix
-		if strings.HasPrefix(path, prefix) {
-			return r.routes[k]
+	return ""
+}
+
+func (r *Router) matchCommon(path string) string {
+	for _, v := range r.keys {
+		if strings.HasPrefix(path, v) {
+			return v
 		}
 	}
-	return &Route{}
+	return ""
+}
+
+func (r *Router) match(path string) http.Handler {
+	if k := r.matchNamed(path); k != "" {
+		return r.namedRoutes[k]
+	}
+
+	if k := r.matchCommon(path); k != "" {
+		return r.routes[k]
+	}
+
+	return http.NotFoundHandler()
 }
 
 func (r *Router) PathPrefix(s string) *Route {
@@ -76,13 +112,5 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var handler http.Handler
-	route := r.match(req.URL.Path)
-	if route.handler != nil {
-		handler = route.handler
-	} else {
-		handler = http.NotFoundHandler()
-	}
-
-	handler.ServeHTTP(w, req)
+	r.match(req.URL.Path).ServeHTTP(w, req)
 }
