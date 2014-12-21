@@ -12,7 +12,7 @@ import (
 
 // Request gathers all information about request
 type Request struct {
-	ID     int64  // storing record ID from URL
+	URL    URL    //storing ID and action from url
 	Root   string // default JSON root key
 	Action string
 	params map[string]interface{}
@@ -26,38 +26,31 @@ func (r *Request) Init(w http.ResponseWriter, req *http.Request, root, prefix st
 	r.w = w
 	r.req = req
 	r.Root = root
-
-	urlParts := getParts(req.URL.Path, prefix)
-	r.ID = urlParts.ID()
-	r.Action = r.makeAction(urlParts)
-
+	r.setURL(prefix)
+	r.Action = r.makeAction()
 	r.params = make(map[string]interface{})
 }
 
-func (r *Request) makeAction(urlParts parts) string {
-	if urlParts.action != "" {
-		return r.req.Method + capitalize(urlParts.action)
+func (r *Request) makeAction() string {
+	if r.URL.Action != "" {
+		return r.req.Method + capitalize(r.URL.Action)
 	}
-	if r.ID > 0 {
+	if r.URL.ID == "" {
 		switch r.req.Method {
 		case "GET":
-			return "Show"
-		case "POST", "PUT":
-			return "Update"
-		case "DELETE":
-			return "Destroy"
+			return "Index"
+		case "POST":
+			return "Create"
 		}
-	}
-
-	if urlParts.id != "" {
-		return r.req.Method + capitalize(urlParts.id)
 	}
 
 	switch r.req.Method {
 	case "GET":
-		return "Index"
-	case "POST":
-		return "Create"
+		return "Show"
+	case "POST", "PUT":
+		return "Update"
+	case "DELETE":
+		return "Destroy"
 	}
 
 	return "WrongAction"
@@ -148,18 +141,8 @@ func (r *Request) LoadFile(field, dir string) (string, error) {
 	return handler.Filename, nil
 }
 
-type parts struct {
-	id, action string
-}
-
-func (p parts) ID() (i int64) {
-	i, _ = strconv.ParseInt(p.id, 10, 64)
-	return
-}
-
-func getParts(path, prefix string) parts {
-	res := parts{}
-	path = strings.TrimPrefix(path, prefix)
+func (r *Request) setURL(prefix string) {
+	path := strings.TrimPrefix(r.req.URL.Path, prefix)
 	path = strings.TrimPrefix(path, "/")
 	path = strings.TrimSuffix(path, "/")
 	parts := strings.Split(path, "/")
@@ -167,11 +150,20 @@ func getParts(path, prefix string) parts {
 	l := len(parts)
 
 	if l > 0 {
-		res.id = parts[0]
+		r.URL.ID = parts[0]
 		if l > 1 {
-			res.action = parts[1]
+			r.URL.Action = parts[1]
 		}
 	}
+}
 
-	return res
+// URL storing id and action from url
+type URL struct {
+	ID, Action string
+}
+
+// ID64 returns ID as int64
+func (u URL) ID64() (i int64) {
+	i, _ = strconv.ParseInt(u.ID, 10, 64)
+	return
 }
