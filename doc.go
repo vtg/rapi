@@ -89,7 +89,7 @@
 //
 //    // Show processed on GET /pages/1
 //    func (p *Pages) Show() {
-//        page := findPage(p.ID)
+//        page := findPage(p.URL.ID64())
 //        if page.Id > 0 {
 //            p.RenderJSON(200, rapi.JSONData{"page": page})
 //        } else {
@@ -101,9 +101,9 @@
 //    // with input data provided {"page":{"name":"New Page","content":"some content"}}
 //    func (p *Pages) Create() {
 //        m := Page{}
-//        // see Request.LoadJSONRequest for more info
-//        p.LoadJSONRequest(p.Root, &m)
 //        if m.Name == "" {
+//            // see Request.LoadJSONRequest for more info
+//            p.LoadJSONRequest(p.Root, &m)
 //            p.RenderJSONError(422, "name required")
 //        } else {
 //            insertPage(m)
@@ -114,10 +114,10 @@
 //    // Update processed on PUT /pages/1
 //    // with input data provided {"page":{"name":"Page 1","content":"updated content"}}
 //    func (p *Pages) Update() {
-//        m := Page{}
-//        p.LoadJSONRequest(p.Root, &m)
-//        page := findPage(p.ID)
+//        page := findPage(p.URL.ID64())
 //        if page.Id > 0 {
+//            m := Page{}
+//            p.LoadJSONRequest(p.Root, &m)
 //            page.Content = m.Content
 //            p.RenderJSON(200, rapi.JSONData{"page": page})
 //        } else {
@@ -127,7 +127,7 @@
 //
 //    // Destroy processed on DELETE /pages/1
 //    func (p *Pages) Destroy() {
-//       page := findPage(p.ID)
+//       page := findPage(p.URL.ID64())
 //       if page.Id > 0 {
 //           delete(pages, page.Id)
 //           p.RenderJSON(203, rapi.JSONData{})
