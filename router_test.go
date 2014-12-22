@@ -60,19 +60,23 @@ func TestRoute(t *testing.T) {
 
 }
 
-func TestRoutesOrder(t *testing.T) {
+type CT struct {
+	Request
+}
 
-	type C struct {
-		Request
-	}
+func (c *CT) GETCollection() {
+
+}
+
+func TestRoutesOrder(t *testing.T) {
 
 	r := NewRouter()
 	r.HandleFunc("/a", HandlerForTest)
-	r.Route("/aa", &C{}, "c")
-	r.Route("/aaa", &C{}, "c")
-	r.Route("/aaaa", &C{}, "c")
-	r.Route("/aaaaa", &C{}, "c")
-	r.Route("/a/a", &C{}, "c")
+	r.Route("/aa", &CT{}, "c")
+	r.Route("/aaa", &CT{}, "c")
+	r.Route("/aaaa", &CT{}, "c")
+	r.Route("/aaaaa", &CT{}, "c")
+	r.Route("/a/a", &CT{}, "c")
 
 	assertEqual(t, "/aa", r.matchCommon("/aa/1"))
 	assertEqual(t, "/a", r.matchNamed("/a"))

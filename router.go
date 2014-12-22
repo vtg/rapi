@@ -2,6 +2,7 @@ package rapi
 
 import (
 	"net/http"
+	"reflect"
 	"sort"
 	"strings"
 )
@@ -27,7 +28,7 @@ func (r *Router) HandleFunc(path string, f func(http.ResponseWriter, *http.Reque
 // and registering controller handler
 func (r *Router) Route(path string, i Controller, rootKey string, funcs ...ReqFunc) {
 	route := r.NewRoute(path)
-	route.HandlerFunc(handle(i, rootKey, route.prefix, funcs...)).addRoute(false)
+	route.HandlerFunc(handle(i, rootKey, route.prefix, implements(i), funcs...)).addRoute(false)
 }
 
 // HandlePrefix registers a new handler to serve prefix
@@ -113,4 +114,21 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	r.match(req.URL.Path).ServeHTTP(w, req)
+}
+
+var meths = []string{"GET", "POST"}
+
+func implements(v interface{}) []string {
+	res := []string{}
+	t := reflect.TypeOf(v)
+	for i := 0; i < t.NumMethod(); i++ {
+		m := t.Method(i)
+		for _, v := range meths {
+			if strings.HasPrefix(m.Name, v) {
+				res = append(res, m.Name)
+				continue
+			}
+		}
+	}
+	return res
 }

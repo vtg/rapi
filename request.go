@@ -22,25 +22,35 @@ type Request struct {
 }
 
 // Init initializing controller
-func (r *Request) Init(w http.ResponseWriter, req *http.Request, root, prefix string) {
+func (r *Request) Init(w http.ResponseWriter, req *http.Request, root, prefix string, extras []string) {
 	r.w = w
 	r.req = req
 	r.Root = root
 	r.setURL(prefix)
-	r.Action = r.makeAction()
+	r.Action = r.makeAction(extras)
 	r.params = make(map[string]interface{})
 }
 
-func (r *Request) makeAction() string {
-	if r.URL.Action != "" {
-		return r.req.Method + capitalize(r.URL.Action)
-	}
+func (r *Request) makeAction(extras []string) string {
 	if r.URL.ID == "" {
 		switch r.req.Method {
 		case "GET":
 			return "Index"
 		case "POST":
 			return "Create"
+		}
+	}
+
+	if r.URL.Action != "" {
+		return r.req.Method + capitalize(r.URL.Action)
+	}
+
+	if len(extras) > 0 {
+		a := r.req.Method + capitalize(r.URL.ID)
+		for _, v := range extras {
+			if a == v {
+				return a
+			}
 		}
 	}
 

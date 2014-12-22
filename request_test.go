@@ -47,7 +47,7 @@ func assertNotEqual(t *testing.T, expect interface{}, v interface{}) {
 
 func newReq(w http.ResponseWriter, req *http.Request, root, prefix string) *Request {
 	r := &Request{}
-	r.Init(w, req, root, prefix)
+	r.Init(w, req, root, prefix, []string{})
 	return r
 }
 
@@ -105,7 +105,7 @@ func TestMakeAction(t *testing.T) {
 func TestQueryParams(t *testing.T) {
 	req := newRequest("GET", "http://localhost/?p1=1&p2=2", "{}")
 	r := Request{}
-	r.Init(httpWriter, req, "root", "")
+	r.Init(httpWriter, req, "root", "", []string{})
 	assertEqual(t, "1", r.QueryParam("p1"))
 	assertEqual(t, "2", r.QueryParam("p2"))
 	assertEqual(t, "", r.QueryParam("p3"))
@@ -114,7 +114,7 @@ func TestQueryParams(t *testing.T) {
 func TestHeader(t *testing.T) {
 	req := newRequest("GET", "http://localhost", "{}")
 	r := Request{}
-	r.Init(httpWriter, req, "root", "")
+	r.Init(httpWriter, req, "root", "", []string{})
 	assertEqual(t, "token1", r.Header("X-API-Token"))
 	assertEqual(t, "", r.Header("X-API-Token1"))
 }
@@ -122,7 +122,7 @@ func TestHeader(t *testing.T) {
 func TestBody(t *testing.T) {
 	req := newRequest("GET", "http://localhost/", "{\"id\":2}")
 	r := Request{}
-	r.Init(httpWriter, req, "root", "")
+	r.Init(httpWriter, req, "root", "", []string{})
 	var res interface{}
 	res = nil
 	r.LoadJSONRequest("", &res)
@@ -132,7 +132,7 @@ func TestBody(t *testing.T) {
 
 	req = newRequest("GET", "http://localhost/", "{\"id\":2}")
 	r = Request{}
-	r.Init(httpWriter, req, "root", "")
+	r.Init(httpWriter, req, "root", "", []string{})
 	res = nil
 	r.LoadJSONRequest("id", &res)
 	in = fmt.Sprintf("%#v", res)
@@ -140,7 +140,7 @@ func TestBody(t *testing.T) {
 
 	req = newRequest("GET", "http://localhost/", "{\"id\":2}")
 	r = Request{}
-	r.Init(httpWriter, req, "root", "")
+	r.Init(httpWriter, req, "root", "", []string{})
 	res = nil
 	r.LoadJSONRequest("id1", &res)
 	assertEqual(t, nil, res)
@@ -148,6 +148,10 @@ func TestBody(t *testing.T) {
 
 type TestC struct {
 	Request
+}
+
+func (t *TestC) GETCollection() {
+	t.RenderJSON(200, JSONData{t.Root: "collection"})
 }
 
 func (t *TestC) Index() {
@@ -166,7 +170,7 @@ func (t *TestC) Create() {
 
 func TestReponseIndex(t *testing.T) {
 	req := newRequest("GET", "http://localhost/pages/", "{}")
-	handler := handle(&TestC{}, "page", "/pages")
+	handler := handle(&TestC{}, "page", "/pages", implements(&TestC{}))
 	rec := newRecorder()
 	handler(rec, req)
 	assertEqual(t, "{\"page\":\"index\"}\n", string(rec.Body.Bytes()))
@@ -174,7 +178,7 @@ func TestReponseIndex(t *testing.T) {
 
 func TestReponseShow(t *testing.T) {
 	req := newRequest("GET", "http://localhost/pages/10", "{}")
-	handler := handle(&TestC{}, "page", "/pages")
+	handler := handle(&TestC{}, "page", "/pages", implements(&TestC{}))
 	rec := newRecorder()
 	handler(rec, req)
 	assertEqual(t, "{\"page\":\"show\"}\n", string(rec.Body.Bytes()))
@@ -182,7 +186,7 @@ func TestReponseShow(t *testing.T) {
 
 func TestReponseCreate(t *testing.T) {
 	req := newRequest("POST", "http://localhost/pages", `{"root":[{"id":1}]}`)
-	handler := handle(&TestC{}, "page", "/pages")
+	handler := handle(&TestC{}, "page", "/pages", implements(&TestC{}))
 	rec := newRecorder()
 	handler(rec, req)
 	assertEqual(t, "{\"page\":[{\"id\":1}]}\n", string(rec.Body.Bytes()))
@@ -190,7 +194,7 @@ func TestReponseCreate(t *testing.T) {
 
 func BenchmarkHandleIndex(b *testing.B) {
 	req := newRequest("GET", "http://localhost/pages/", "{}")
-	handler := handle(&TestC{}, "page", "/pages")
+	handler := handle(&TestC{}, "page", "/pages", implements(&TestC{}))
 
 	for n := 0; n < b.N; n++ {
 		handler(newRecorder(), req)
@@ -199,7 +203,7 @@ func BenchmarkHandleIndex(b *testing.B) {
 
 func BenchmarkHandleShow(b *testing.B) {
 	req := newRequest("GET", "http://localhost/pages/10", "{}")
-	handler := handle(&TestC{}, "page", "/pages")
+	handler := handle(&TestC{}, "page", "/pages", implements(&TestC{}))
 
 	for n := 0; n < b.N; n++ {
 		handler(newRecorder(), req)
@@ -208,7 +212,7 @@ func BenchmarkHandleShow(b *testing.B) {
 
 func BenchmarkHandleCreate(b *testing.B) {
 	req := newRequest("POST", "http://localhost/pages/", `{"root":[{"id":1}]}`)
-	handler := handle(&TestC{}, "page", "/pages")
+	handler := handle(&TestC{}, "page", "/pages", implements(&TestC{}))
 
 	for n := 0; n < b.N; n++ {
 		handler(newRecorder(), req)

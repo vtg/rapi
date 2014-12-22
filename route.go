@@ -26,7 +26,7 @@ func (r *Route) HandleFunc(s string, f func(http.ResponseWriter, *http.Request))
 //
 func (r *Route) Route(path string, i Controller, rootKey string, funcs ...ReqFunc) {
 	rt := r.NewRoute(path)
-	rt.HandlerFunc(handle(i, rootKey, rt.prefix, funcs...)).addRoute(false)
+	rt.HandlerFunc(handle(i, rootKey, rt.prefix, implements(i), funcs...)).addRoute(false)
 }
 
 // FileServer provides static files serving
