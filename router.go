@@ -118,6 +118,8 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 var meths = []string{"GET", "POST"}
 
+// implements extracting custom methods from controller
+// custom method names should begin from GET or POST
 func implements(v interface{}) []string {
 	res := []string{}
 	t := reflect.TypeOf(v)
