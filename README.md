@@ -2,6 +2,8 @@ rapi
 ====
 HTTP routing package that helps to create restfull json api for Go applications.
 
+Note: The project has been moved into new repository: [github.com/vtg/flash](https://github.com/vtg/flash)
+
 what it does:
 
  - dispatching actions to controllers
